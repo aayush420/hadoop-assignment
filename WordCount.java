@@ -11,6 +11,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -39,13 +40,15 @@ public class WordCount {
 
     private final static DoubleWritable one = new DoubleWritable(1);
     private Text word = new Text();
+    private String filePathString;
 
     public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
       PorterStemmer stemmer = new PorterStemmer();
       StringTokenizer itr = new StringTokenizer(value.toString());
+      filePathString = ((FileSplit) context.getInputSplit()).getPath().toString() + "\t";
       while (itr.hasMoreTokens()) {
         word.set(stemmer.stem(itr.nextToken()));
-        context.write(word, one);
+        context.write(new Text(filePathString + word.toString()), one);
       }
     }
   }
@@ -68,9 +71,10 @@ public class WordCount {
       for (DoubleWritable val : values) {
         sum += (double) val.get();
       }
+      String[] keys = key.toString().split("\t");
       int df;
       try {
-        df = Integer.parseInt(dfProps.getProperty(key.toString()));
+        df = Integer.parseInt(dfProps.getProperty(keys[1]));
       } catch (Exception e) {
         df = 0;
       }
