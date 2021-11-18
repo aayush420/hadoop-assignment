@@ -68,7 +68,13 @@ public class WordCount {
       for (DoubleWritable val : values) {
         sum += (double) val.get();
       }
-      result.set((double) sum * Math.log(10000 / (sum + 1)));
+      int df;
+      try {
+        df = Integer.parseInt(dfProps.getProperty(key.toString()));
+      } catch (Exception e) {
+        df = 0;
+      }
+      result.set((double) sum * Math.log(10000 / (df + 1)));
       context.write(key, result);
     }
   }
